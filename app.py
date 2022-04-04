@@ -4,7 +4,7 @@ from github import Github, GithubIntegration
 
 app = Flask(__name__)
 
-app_id = '<your_app_number_here>'
+app_id = '187088'
 
 # Read the bot certificate
 with open(
@@ -19,7 +19,7 @@ git_integration = GithubIntegration(
     app_key,
 )
 
-def pr_opened_event(repo, payload):
+def pr_merged_event(repo, payload):
     pr = repo.get_issue(number=payload['pull_request']['number'])
     author = pr.user.login
 
@@ -29,7 +29,6 @@ def pr_opened_event(repo, payload):
         response = f"Thanks for opening this pull request, @{author}! " \
                    f"The repository maintainers will look into it ASAP! :speech_balloon:"
         pr.create_comment(f"{response}")
-        pr.add_to_labels("needs review")
 
 @app.route("/", methods=['POST'])
 def bot():
@@ -48,9 +47,11 @@ def bot():
     )
     repo = git_connection.get_repo(f"{owner}/{repo_name}")
 
-    # Check if the event is a GitHub pull request creation event
-    if all(k in payload.keys() for k in ['action', 'pull_request']) and payload['action'] == 'opened':
-        pr_opened_event(repo, payload)
+    # Check if the event is a GitHub pull request merged event
+    if all(k in payload.keys() for k in ['action', 'pull_request']) and payload['action'] == 'closed':
+        merged = payload['pull_request']['merged']
+        if merged:
+            pr_merged_event(repo, payload)
 
     return "", 204
 
