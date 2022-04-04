@@ -23,12 +23,11 @@ def pr_merged_event(repo, payload):
     pr = repo.get_issue(number=payload['pull_request']['number'])
     author = pr.user.login
 
-    is_first_pr = repo.get_issues(creator=author).totalCount
-
-    if is_first_pr == 1:
-        response = f"Thanks for opening this pull request, @{author}! " \
-                   f"The repository maintainers will look into it ASAP! :speech_balloon:"
-        pr.create_comment(f"{response}")
+    response = f"Thanks for opening this pull request, @{author}! " \
+               f"The repository maintainers will look into it ASAP! :speech_balloon:"
+    pr.create_comment(f"{response}")
+    branch = payload['pull_request']['head']['ref']
+    repo.get_git_ref(f"heads/{branch}").delete()
 
 @app.route("/", methods=['POST'])
 def bot():
